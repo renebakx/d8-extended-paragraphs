@@ -1,0 +1,112 @@
+<?php
+
+/**
+ * @file
+ * Contains extended_paragraph.module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\node\Entity\Node;
+
+/**
+ * Implements hook_help().
+ */
+function extended_paragraph_help($route_name, RouteMatchInterface $route_match)
+{
+  switch ($route_name) {
+    // Main module help for the extended_paragraph module.
+    case 'help.page.extended_paragraph':
+      $output = '';
+      $output .= '<h3>'.t('About').'</h3>';
+      $output .= '<p>'.t('Extendeds the paragraph entity so it can be used in a IEF environment.').'</p>';
+      $output .= '<p>'.t('Rene must write some more text here!').'</p>';
+
+      return $output;
+
+    default:
+  }
+}
+
+/**
+ * Implements hook_install().
+ */
+function extended_paragraph_install()
+{
+    $definition = \Drupal::service('entity_field.manager')->getFieldStorageDefinitions('paragraph')['reference'];
+    \Drupal::service('field_storage_definition.listener')->onFieldStorageDefinitionCreate($definition);
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function extended_paragraph_uninstall()
+{
+    $definition = \Drupal::service('entity.last_installed_schema.repository')->getLastInstalledFieldStorageDefinitions('paragraph')['reference'];
+    \Drupal::service('field_storage_definition.listener')->onFieldStorageDefinitionDelete($definition);
+}
+
+/**
+ * Implements hook_entity_type_build().
+ */
+function extended_paragraph_entity_type_build(array &$entity_types)
+{
+  if (isset($entity_types['paragraph'])) {
+    $entity_types['paragraph']->setClass('Drupal\extended_paragraph\Entity\ExtendedParagraph');
+  }
+}
+
+/**
+ * Implements hook_entity_base_field_info().
+ */
+function extended_paragraph_entity_base_field_info(\Drupal\Core\Entity\EntityTypeInterface $entity_type)
+{
+  if ($entity_type->id() == 'paragraph') {
+    $fields['reference'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Reference'))
+      ->setDescription(t('Your reference to this paragraph.'))
+      ->setSettings(
+        array(
+          'max_length' => 150,
+          'text_processing' => 0,
+        )
+      )
+      ->setDefaultValue('')
+      ->setDisplayOptions(
+        'form',
+        array(
+          'type' => 'string_textfield',
+          'weight' => -4,
+        )
+      )
+      ->setRevisionable(FALSE)
+      ->setTranslatable(TRUE)
+      ->setDisplayConfigurable('form', true);
+    return $fields;
+  }
+}
+
+
+
+/**
+ * Implements hook_node_translation_create().
+ *
+ * Clone the paragraphs on preperation of the new translation..
+ */
+function extended_paragraph_node_translation_create(Node $node) {
+  $cloneService = \Drupal::getContainer()->get('extended_paragraph.clone_referenced_entity');
+  $targetLanguageId = $node->language()->getId();
+
+  foreach ($node->getFields() as $field) {
+    /** @var \Drupal\field\Entity\FieldConfig $fieldDef */
+    $fieldDef = $field->getFieldDefinition();
+    if ($fieldDef->getType() == 'entity_reference_revisions') {
+      $fieldName = $field->getName();
+      if ($cloneService->checkEntityTypeCloneable($node->get($fieldName)->entity->getEntityTypeId())){
+        $targetField = $field->getName();
+        $translatedFieldData = $cloneService->translateFieldOnNode($node,$targetField,$targetLanguageId);
+        $node->set($targetField,$translatedFieldData[$targetField]);
+      }
+    }
+  }
+}

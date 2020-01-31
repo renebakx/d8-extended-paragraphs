@@ -1,0 +1,5 @@
+services:
+  extended_paragraph.clone_referenced_entity:
+    class: Drupal\extended_paragraph\CloneReferencedEntityService
+    arguments: ['@entity_type.manager']
+

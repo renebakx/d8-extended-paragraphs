@@ -1,0 +1,8 @@
+name: Extended Paragraph
+type: module
+description: Extendeds the paragraph entity so it can be used in a IEF environment.
+core: 8.x
+package: Paragraphs
+dependencies:
+  - paragraphs
+  - inline_entity_form

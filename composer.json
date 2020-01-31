@@ -1,0 +1,14 @@
+{
+  "name": "drupal/extended_paragraph",
+  "type": "drupal-module",
+  "description": "Extended paragraph <todo write more when done>",
+  "keywords": ["Drupal"],
+  "license": "GPL-2.0+",
+  "homepage": "https://www.drupal.org/project/extended_paragraph",
+  "minimum-stability": "dev",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/extended_paragraph",
+    "source": "http://cgit.drupalcode.org/extended_paragraph"
+  },
+  "require": { }
+}
